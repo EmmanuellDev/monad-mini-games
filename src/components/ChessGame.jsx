@@ -197,7 +197,7 @@ const LGT_ABI = [
   {"inputs":[],"name":"WIN_REWARD","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
 ];
 
-export default function ChessGame({ roomCode, mode, points, setPoints, showToast, onBackToHome }) {
+export default function ChessGame({ roomCode, mode, points, setPoints, showToast = () => {}, onBackToHome }) {
   const [board, setBoard] = useState(initialBoard.map(row => [...row]));
   const [turn, setTurn] = useState("w");
   const [selected, setSelected] = useState(null);
@@ -230,13 +230,19 @@ export default function ChessGame({ roomCode, mode, points, setPoints, showToast
     }
   }
 
-  // Reward winner with LGT tokens (only works if owner wallet is connected)
+  // Reward winner: first payout bet pot, then mint LGT tokens
   async function rewardWinnerLGT() {
     if (!window.ethereum) {
       alert("MetaMask is not installed");
       return;
     }
     try {
+      // Dynamically import payoutWinner from Home.jsx
+      const mod = await import("./Home.jsx");
+      // Use showToast for user feedback
+      const payoutOk = await mod.payoutWinner(roomCode, walletAddress, msg => showToast(msg));
+      if (!payoutOk) return;
+      // Now mint LGT reward
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       const contract = new ethers.Contract(LGT_CONTRACT_ADDRESS, LGT_ABI, signer);
@@ -594,7 +600,7 @@ export default function ChessGame({ roomCode, mode, points, setPoints, showToast
                       background: '#a3e635', color: '#222', fontWeight: 'bold', fontSize: 18, padding: '10px 24px', borderRadius: 8, margin: '24px auto 0', boxShadow: '0 2px 8px #000a', cursor: 'pointer', border: 'none', display: 'block'
                     }}
                   >
-                    Claim 10 LGT Reward
+                    Claim Monad Reward
                   </button>
                 )}
                 {isLocalWinner && rewardClaimed && (

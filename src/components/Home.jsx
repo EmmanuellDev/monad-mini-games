@@ -1,31 +1,331 @@
+// BettingEscrow contract integration
+// IMPORTANT: Replace with your deployed contract address (not ENS, not empty string)
+const BETTING_CONTRACT = "0xE6CB3B707BB6368130bd7b2c85cAc2B5e6eb1176"; // Example address, replace with real one
+const BETTING_ABI = [
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "roomId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "player",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "BetPlaced",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "roomId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "player2",
+        "type": "address"
+      }
+    ],
+    "name": "PlayerJoined",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "roomId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "player1",
+        "type": "address"
+      }
+    ],
+    "name": "RoomCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "bytes32",
+        "name": "roomId",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "winner",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "WinnerPaid",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "BET_AMOUNT",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "roomId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "createRoom",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "roomId",
+        "type": "bytes32"
+      }
+    ],
+    "name": "joinRoom",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "roomId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "address",
+        "name": "winner",
+        "type": "address"
+      }
+    ],
+    "name": "payoutWinner",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "rooms",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "player1",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "player2",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "pot",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bool",
+        "name": "player1Paid",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "player2Paid",
+        "type": "bool"
+      },
+      {
+        "internalType": "address",
+        "name": "winner",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "paidOut",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+];
+
+function getRoomId(code) {
+  // Use ethers.keccak256 for roomId (no ENS, no ethers.id)
+  return ethers.keccak256(ethers.toUtf8Bytes(code));
+}
+
+async function payBetAndCreateRoom(roomCode, setToast) {
+  if (!window.ethereum) {
+    setToast("MetaMask required");
+    setTimeout(() => setToast(""), 2500);
+    return false;
+  }
+  try {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const contract = new ethers.Contract(BETTING_CONTRACT, BETTING_ABI, signer);
+    const roomId = getRoomId(roomCode);
+    const tx = await contract.createRoom(roomId, { value: ethers.parseEther("0.001") });
+    await tx.wait();
+    setToast("Bet placed! Room created.");
+    setTimeout(() => setToast(""), 2500);
+    return true;
+  } catch (err) {
+    setToast("Bet failed: " + (err.reason || err.message));
+    setTimeout(() => setToast(""), 2500);
+    return false;
+  }
+}
+
+async function payBetAndJoinRoom(roomCode, setToast) {
+  if (!window.ethereum) {
+    setToast("MetaMask required");
+    setTimeout(() => setToast(""), 2500);
+    return false;
+  }
+  try {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const contract = new ethers.Contract(BETTING_CONTRACT, BETTING_ABI, signer);
+    const roomId = getRoomId(roomCode);
+    const tx = await contract.joinRoom(roomId, { value: ethers.parseEther("0.001") });
+    await tx.wait();
+    setToast("Bet placed! Joined room.");
+    setTimeout(() => setToast(""), 2500);
+    return true;
+  } catch (err) {
+    setToast("Bet failed: " + (err.reason || err.message));
+    setTimeout(() => setToast(""), 2500);
+    return false;
+  }
+}
+
+// To be called by ChessGame on game end (winnerAddress = wallet address of winner)
+export async function payoutWinner(roomCode, winnerAddress, setToast) {
+  // Check both players have paid and pot is correct before payout
+  try {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const contract = new ethers.Contract(BETTING_CONTRACT, BETTING_ABI, signer);
+    const roomId = getRoomId(roomCode);
+    const room = await contract.rooms(roomId);
+    if (!room.player1Paid || !room.player2Paid) {
+      setToast("Both players must pay before payout");
+      setTimeout(() => setToast(""), 2500);
+      return false;
+    }
+    if (room.pot === 0n) {
+      setToast("Pot is empty, cannot payout");
+      setTimeout(() => setToast(""), 2500);
+      return false;
+    }
+  } catch (err) {
+    setToast("Error checking room state: " + (err.reason || err.message));
+    setTimeout(() => setToast(""), 2500);
+    return false;
+  }
+  if (!window.ethereum) {
+    setToast("MetaMask required");
+    setTimeout(() => setToast(""), 2500);
+    return false;
+  }
+  try {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const contract = new ethers.Contract(BETTING_CONTRACT, BETTING_ABI, signer);
+    const roomId = getRoomId(roomCode);
+    const tx = await contract.payoutWinner(roomId, winnerAddress);
+    await tx.wait();
+    setToast("Winnings paid out!");
+    setTimeout(() => setToast(""), 2500);
+    return true;
+  } catch (err) {
+    setToast("Payout failed: " + (err.reason || err.message));
+    setTimeout(() => setToast(""), 2500);
+    return false;
+  }
+}
 import React, { useState } from "react";
 import { ethers } from "ethers";
 import { Crown, Shield, Castle, Gem, Swords, Circle, Coins } from 'lucide-react';
 // Remove: import Chess3DBackground from './Chess3DBackground';
 
-// Add LGT to MetaMask handler
-const addLGTtoMetaMask = async () => {
+// Add Monad Testnet to MetaMask handler
+const addMonadTestnetToMetaMask = async () => {
   if (window.ethereum) {
     try {
       await window.ethereum.request({
-        method: 'wallet_watchAsset',
-        params: {
-          type: 'ERC20',
-          options: {
-            address: '0x8f1afe3e227566cfb39eb04148fa6dc302ffd7e5',
-            symbol: 'LGT',
+        method: 'wallet_addEthereumChain',
+        params: [{
+          chainId: '0x279f', // 10143 in hex
+          chainName: 'Monad Testnet',
+          rpcUrls: ['https://testnet-rpc.monad.xyz'],
+          nativeCurrency: {
+            name: 'Monad',
+            symbol: 'MON',
             decimals: 18,
-            image: '', // Optionally add a token logo URL
           },
-        },
+          blockExplorerUrls: ['https://testnet.monadexplorer.com/'],
+        }],
       });
+      alert('Monad Testnet added to MetaMask!');
     } catch (error) {
-      alert('Could not add token: ' + error.message);
+      alert('Could not add Monad Testnet: ' + error.message);
     }
   } else {
     alert('MetaMask is not installed.');
   }
 };
+
 
 // Mock user level (replace with real user progress logic as needed)
 const userLevel = 3; // Change to 5+ to unlock Andhra Pradesh
@@ -256,15 +556,20 @@ export default function Home({ onStartGame, onCreateRoom, onJoinRoom }) {
         </button>
         <button
           className="flex items-center justify-center gap-3 bg-gradient-to-r from-blue-500 via-blue-400 to-blue-600 hover:from-blue-600 hover:to-blue-400 text-white font-extrabold py-4 px-8 rounded-2xl text-xl shadow-2xl transition-all duration-200 border-4 border-blue-200 hover:scale-105 active:scale-95"
-          onClick={() => {
+          onClick={async () => {
             // Generate a random 6-character room code
             const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-            setRoomCode(code);
-            setMode("create-room");
+            // Pay bet and create room on chain
+            const ok = await payBetAndCreateRoom(code, setToast);
+            if (ok) {
+              setRoomCode(code);
+              setMode("create-room");
+            }
           }}
         >
           <Coins className="inline-block text-yellow-300 drop-shadow-md" size={26} />
           Play with Friend (create room)
+          <span className="ml-2 text-xs text-yellow-200">(0.001 MON bet)</span>
         </button>
         <button
           className="flex items-center justify-center gap-3 bg-gradient-to-r from-green-500 via-green-400 to-green-600 hover:from-green-600 hover:to-green-400 text-white font-extrabold py-4 px-8 rounded-2xl text-xl shadow-2xl transition-all duration-200 border-4 border-green-200 hover:scale-105 active:scale-95"
@@ -272,14 +577,21 @@ export default function Home({ onStartGame, onCreateRoom, onJoinRoom }) {
         >
           <Coins className="inline-block text-yellow-300 drop-shadow-md" size={26} />
           Play with Friend (join room)
+          <span className="ml-2 text-xs text-yellow-200">(0.001 MON bet)</span>
         </button>
-        {/* Add LGT Token to MetaMask button */}
+        {/* Add Monad Testnet to MetaMask button */}
         <button
           className="flex items-center justify-center gap-3 bg-gradient-to-r from-purple-600 via-purple-500 to-purple-700 hover:from-purple-700 hover:to-purple-500 text-white font-extrabold py-3 px-8 rounded-2xl text-lg shadow-2xl transition-all duration-200 border-4 border-purple-200 hover:scale-105 active:scale-95 mt-2"
-          onClick={addLGTtoMetaMask}
+          onClick={addMonadTestnetToMetaMask}
         >
           <Gem className="inline-block text-yellow-200 drop-shadow-md" size={22} />
-          Add LGT Token to MetaMask
+          Add Monad Testnet to MetaMask
+        </button>
+                <button
+          className="flex items-center justify-center gap-3 bg-gradient-to-r from-orange-400 via-orange-300 to-orange-500 hover:from-orange-500 hover:to-orange-400 text-black font-extrabold py-4 px-8 rounded-2xl text-xl shadow-2xl transition-all duration-200 border-4 border-orange-200 hover:scale-105 active:scale-95 mb-2"
+          onClick={() => window.location.href = '/games'}
+        >
+          Explore Mini Games
         </button>
       </div>
       {/* Level selection modal */}
@@ -323,15 +635,19 @@ export default function Home({ onStartGame, onCreateRoom, onJoinRoom }) {
             />
             <button
               className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-6 rounded-lg text-lg shadow-lg transition mb-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={() => {
-                setRoomCode(inputCode);
-                onJoinRoom(inputCode);
-                setInputCode("");
-                setMode("home");
+              onClick={async () => {
+                // Pay bet and join room on chain
+                const ok = await payBetAndJoinRoom(inputCode, setToast);
+                if (ok) {
+                  setRoomCode(inputCode);
+                  onJoinRoom(inputCode);
+                  setInputCode("");
+                  setMode("home");
+                }
               }}
               disabled={!inputCode}
             >
-              Join Game
+              Join Game (0.001 MON bet)
             </button>
             <button
               className="text-gray-400 hover:text-white underline"

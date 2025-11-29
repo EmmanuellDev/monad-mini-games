@@ -1,0 +1,195 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* CSS Custom Properties for components */
+:root {
+  /* Font Families */
+  --font-display: -apple-system, "SF Pro Display", BlinkMacSystemFont, Inter, system-ui, sans-serif;
+  --font-body: -apple-system, "SF Pro Text", BlinkMacSystemFont, Inter, system-ui, sans-serif;
+  --font-mono: "SF Mono", Monaco, "Cascadia Code", "Courier New", monospace;
+
+  /* Colors - Background (Darker Polkadot theme) */
+  --color-bg-base: #0A0A0F;
+  --color-bg-elevated: #13131A;
+  --color-bg-surface: #1C1C1E;
+  --color-bg-overlay: #2C2C2E;
+
+  /* Colors - Foreground */
+  --color-fg-primary: #FFFFFF;
+  --color-fg-secondary: #E0E0E0;
+  --color-fg-tertiary: #98989D;
+  --color-fg-disabled: #636366;
+
+  /* Colors - Accents (Monad Purple/Violet) */
+  --color-accent-purple: #9D4EDD;
+  --color-accent-violet: #7B2CBF;
+  --color-accent-indigo: #5A189A;
+  --color-accent-lavender: #C77DFF;
+  --color-accent-green: #06FFA5;
+  --color-accent-orange: #FF9F0A;
+  --color-accent-red: #FF453A;
+  --color-accent-cyan: #00D9FF;
+
+  /* Borders & Dividers */
+  --color-border-subtle: rgba(157, 78, 221, 0.15);
+  --color-border-default: rgba(157, 78, 221, 0.2);
+  --color-border-strong: rgba(157, 78, 221, 0.4);
+
+  /* Glass Effect */
+  --color-glass-bg: rgba(19, 19, 26, 0.8);
+
+  /* Shadows (Purple glow) */
+  --shadow-glow-purple: 0 0 15px rgba(157, 78, 221, 0.35), 0 0 30px rgba(157, 78, 221, 0.2);
+  --shadow-glow-violet: 0 0 20px rgba(123, 44, 191, 0.4), 0 0 40px rgba(123, 44, 191, 0.25);
+  --shadow-sm-glow-purple: 0 0 8px rgba(157, 78, 221, 0.25);
+}
+
+/* Layer for custom utilities */
+@layer utilities {
+  .bg-gradient-radial {
+    background-image: radial-gradient(var(--tw-gradient-stops));
+  }
+  
+  .shadow-glow-purple {
+    box-shadow: 0 0 15px rgba(157, 78, 221, 0.35), 0 0 30px rgba(157, 78, 221, 0.2);
+  }
+  
+  .shadow-glow-violet {
+    box-shadow: 0 0 20px rgba(123, 44, 191, 0.4), 0 0 40px rgba(123, 44, 191, 0.25);
+  }
+  
+  /* Ensure proper centering */
+  .container-center {
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+/* DatasetDAO Design System - Polkadot & Apple Inspired */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body {
+  background: #0A0A0F;
+  color: #E0E0E0;
+  font-family: -apple-system, "SF Pro Text", BlinkMacSystemFont, Inter, system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+main {
+  width: 100%;
+  max-width: 100vw;
+  margin: 0 auto;
+}
+
+/* Smooth scrolling for sections */
+section {
+  scroll-margin-top: 80px;
+}
+
+/* Focus visible styles for accessibility */
+*:focus-visible {
+  outline: 2px solid #9D4EDD;
+  outline-offset: 2px;
+}
+
+/* Better line height for headings */
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.2;
+  font-weight: 600;
+  color: #FFFFFF;
+  text-shadow: 0 2px 20px rgba(255, 255, 255, 0.1);
+}
+
+p, li, span {
+  color: #E0E0E0;
+}
+
+/* Prevent layout shift */
+img, video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Purple glow pulse animation */
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(157, 78, 221, 0.5); }
+  50% { box-shadow: 0 0 40px rgba(157, 78, 221, 0.8); }
+}
+
+/* Gradient text shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Floating animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+.glow-pink {
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, #FFFFFF 25%, #9D4EDD 50%, #FFFFFF 75%);
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3s linear infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #13131A;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #9D4EDD;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #7B2CBF;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
